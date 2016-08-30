@@ -17,6 +17,8 @@ The database user must have full permission on `my_schema` and read access to th
 
 Depends on `bash`, `psql` and `awk`
 
+More documentation can be found at the [v2 Migration Guide](https://docs.stitchdata.com/hc/en-us/articles/226410788) in the Stitch Help Center
+
 ### compatibility
 
 Tested on OS X 10.11.5 and Ubuntu 14.04.5
