@@ -6,6 +6,12 @@
 # Migrates Stitch data in Redshift to a v2-compatible structure.
 # This script is provided as-is and should be used with caution.
 #
+# TODO PGPASSWORD doesn't appear to be used here?
+# TODO my preference wolud be for a dry-run argument rather than an
+# environment variable
+# TODO you're subtly breaking gnu conventions which isn't the end of the
+# world but traditionally long arguments are `--long=foo` and short are
+# `-l foo`. up to you
 # Usage: PGPASSWORD=mypass DRY_RUN=true bash migrate.sh --user my-stitch-user --host mydb.abcdef1234.us-east-1.redshift.amazonaws.com --port 5439 --database mydb --schema my_schema
 #
 # The above will print the backup commands the script
@@ -13,10 +19,14 @@
 #
 ##
 
+# TODO I believe you want this to be (( $# > 1 )) since it's an arithmetic
+# comparison
 while [[ $# -gt 1 ]]
 do
 key="$1"
 
+# TODO i'd personally rename all the variables here to lower case. see
+# http://mywiki.wooledge.org/BashGuide/InputAndOutput#The_Environment
 case $key in
     -h|--host)
     HOST="$2"
@@ -46,6 +56,7 @@ shift # past argument or value
 done
 
 SQL_CMD="psql --host $HOST --port $PORT --user $USER $DATABASE --no-align --quiet -t --field-separator ' '"
+# TODO might consider using `mktemp` here.
 TMP_FILE=".sdc.tmp"
 TMP_SQL_FILE=".sdc.sql.tmp"
 
