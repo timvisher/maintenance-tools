@@ -55,6 +55,8 @@ esac
 shift # past argument or value
 done
 
+# TODO since we're trying to execute this later it should be an
+# array. http://mywiki.wooledge.org/BashFAQ/050
 SQL_CMD="psql --host $HOST --port $PORT --user $USER $DATABASE --no-align --quiet -t --field-separator ' '"
 # TODO might consider using `mktemp` here.
 TMP_FILE=".sdc.tmp"
@@ -63,6 +65,10 @@ TMP_SQL_FILE=".sdc.sql.tmp"
 backup_table ()
 {
 	TABLE=$1
+        # TODO this method of building up an array is a little dangerous
+        # as there can be subtle word-splitting bugs. Unless you can be
+        # 100% certain that you won't fall afoul of that, you should build
+        # these up using `read -r` and a while loop over the results.
 	SOURCE_SCHEMA=($(awk "\$2 == \"$TABLE\" {print \$3; exit;}" $TMP_FILE))
 	SOURCE_TABLE=($(awk "\$2 == \"$TABLE\" {print \$4; exit;}" $TMP_FILE))
 	TABLE_VERSION=$(echo $SOURCE_TABLE | grep -Eo '[0-9]+$')
@@ -78,11 +84,15 @@ backup_table ()
 		echo ""
 		cat "$TMP_SQL_FILE"
 	else
+            # TODO not sure i follow the need for eval here. Why not just execute it?
+            # "${SQL_CMD[@]}" -f "$TMP_SQL_FILE"
 		eval "${SQL_CMD} -f ${TMP_SQL_FILE}"
 	fi
 
 }
 
+# TODO looks like we've mixed tabs and spaces here
+# TODO generally don't we put the commas at the end of the line they're on?
 COLUMN_SQL="
 select
     dep.view_schema
@@ -98,8 +108,11 @@ join information_schema.columns cols
   where dep.view_schema = '$SCHEMA'
 "
 
+# TODO same confusion about eval here.
+# TODO think you mean to use $TMP_FILE here
 eval "${SQL_CMD} -c \"${COLUMN_SQL}\" > .sdc.tmp"
 
+# TODO in general just quote every variable expansion.
 cat $TMP_FILE | cut -d ' ' -f2 | sort -u | while read TABLE; do
 	echo "Backing up $TABLE"
 	backup_table $TABLE
